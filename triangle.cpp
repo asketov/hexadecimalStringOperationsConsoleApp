@@ -27,12 +27,10 @@ public:
 	}
 	triangle(triangle& Triangle) 	//конструктор копирования
 	{
-		side1 = Triangle.side1; angle1 = Triangle.angle1; angle2 = Triangle.angle2;
+		side1 = Triangle.side1; 
+		angle1 = Triangle.angle1; 
+		angle2 = Triangle.angle2;
 		cout << "Сработал конструктор копирования" << endl;
-	}
-	double get_side1()
-	{
-		return side1;
 	}
 	double get_angle1()
 	{
@@ -42,6 +40,22 @@ public:
 	{
 		return angle2;
 	}
+	double get_angle3()
+	{
+		return 180 - angle1 - angle2;
+	}
+	double get_side1()
+	{
+		return side1;
+	}
+	double get_side2()
+	{
+		return side1 * sin(angle1 * PI / 180) / sin(get_angle3() * PI / 180);
+	}
+	double get_side3()
+	{
+		return side1 * sin(angle2 * PI / 180) / sin(get_angle3() * PI / 180);
+	}
 	void set_side1(double Side1)
 	{
 		assert(Side1 >= 0);
@@ -50,12 +64,12 @@ public:
 	}
 	void set_angle1(double Angle1)
 	{
-		assert(Angle1 > 0 || Angle1 < 180);
+		assert(Angle1 > 0 && Angle1 < 180);
 		angle1 = Angle1;
 	}
 	void set_angle2(double Angle2)
 	{
-		assert(Angle2 > 0 || Angle2 < 180);
+		assert(Angle2 > 0 && Angle2 < 180);
 		angle2 = Angle2;
 	}
 	double write_side1()
@@ -85,36 +99,36 @@ public:
 	double perimetr()
 	{
 		double angle3, side2, side3;
-		angle3 = 180 - angle1 - angle2;
-		side2 = fabs(side1 * sin(angle1 * PI / 180) / sin(angle3 * PI / 180));
-		side3 = fabs(side1 * sin(angle2 * PI / 180) / sin(angle3 * PI / 180));
+		angle3 = get_angle3();
+		side2 = get_side2();
+		side3 = get_side3();
 		return (side1 + side2 + side3);
 	}
 	double mediana()
 	{
 		double side2, side3;
-		double angle3 = 180 - angle1 - angle2;
-		side2 = fabs(side1 * sin(angle1 * PI / 180) / sin(angle3 * PI / 180));
-		side3 = fabs(side1 * sin(angle2 * PI / 180) / sin(angle3 * PI / 180));
+		double angle3 = get_angle3();
+		side2 = get_side2();
+		side3 = get_side3();
 		return 0.5 * sqrt(2 * side2 * side2 + 2 * side3 * side3 - side1 * side1);
 	}
 	double radius()
 	{
 		double side2, side3;
-		double angle3 = 180 - angle1 - angle2;
-		side2 = fabs(side1 * sin(angle1 * PI / 180) / sin(angle3 * PI / 180));
-		side3 = fabs(side1 * sin(angle2 * PI / 180) / sin(angle3 * PI / 180));
+		double angle3 = get_angle3();
+		side2 = get_side2();
+		side3 = get_side3();
 		double HalfPerimetr = 0.5 * (side1 + side2 + side3);
 		return (side1 * side2 * side3) / (4 * sqrt(HalfPerimetr * (HalfPerimetr - side1) * (HalfPerimetr - side2) * (HalfPerimetr - side3)));
 	}
 	bool operator== (triangle& Triangle)
 	{
-		double angle3 = 180 - angle1 - angle2;
-		double side2 = fabs(side1 * sin(angle1 * PI / 180) / sin(angle3 * PI / 180));
-		double side3 = fabs(side1 * sin(angle2 * PI / 180) / sin(angle3 * PI / 180));
-		double Triangle_angle3 = 180 - Triangle.angle1 - Triangle.angle2;
-		double Triangle_side2 = fabs(Triangle.side1 * sin(Triangle.angle1 * PI / 180) / sin(Triangle_angle3 * PI / 180));
-		double Triangle_side3 = fabs(Triangle.side1 * sin(Triangle.angle2 * PI / 180) / sin(Triangle_angle3 * PI / 180));
+		double angle3 = get_angle3();
+		double side2 = get_side2();
+		double side3 = get_side3();
+		double Triangle_angle3 = Triangle.get_angle3();
+		double Triangle_side2 = Triangle.get_side2();
+		double Triangle_side3 = Triangle.get_side3();
 		if (side1 == Triangle.side1 && angle1 == Triangle.angle1 && angle2 == Triangle.angle2) return true;
 		else if (angle1 == Triangle.angle1)
 		{
