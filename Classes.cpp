@@ -1,6 +1,8 @@
 #include <iostream>
 #include <sstream>
 #include <cstring>
+#include <string>
+#include <vector>
 
 using namespace std;
 
@@ -9,6 +11,25 @@ class Line // класс строка
 private:
 	int length;
 	char* line;
+protected:
+	void set_length(int length)
+	{
+		this->length = length;
+	}
+	void set_line(char* line)
+	{
+		if (line == NULL)
+		{
+			cout << "Строка имеет NULL, создана пустая строка" << endl;
+			line = new char;
+			line[0] = '\0';
+		}
+		else this->line = line;
+	}
+	char* get_line()
+	{
+		return line;
+	}
 public:
 	~Line()
 	{
@@ -18,20 +39,23 @@ public:
 	Line()
 	{
 		set_length(0);
-		set_line(NULL);
+		line = new char;
+		line[0] = '\0';
 		cout << "Сработал конструктор без параметров класса Line\n";
 	}
 	Line(char* Line)
 	{
+		delete line;
 		line = new char[strlen(Line) + 1];
 		length = strlen(Line);
-		strcpy_s(line, strlen(Line)+1, Line);
+		strcpy_s(line, strlen(Line) + 1, Line);
 		cout << "Сработал конструктор с параметрами класса Line 22\n";
 	}
 	Line(char Line)
 	{
 		length = 1;
-		line = &Line;
+		line = new char;
+		line[0] = Line;
 	}
 	Line(Line& line1)
 	{
@@ -45,36 +69,22 @@ public:
 	{
 		return length;
 	}
-	char* get_line()
-	{
-		return line;
-	}
-	void set_length(int length)
-	{
-		this->length = length;
-	}
-	void set_line(char* line)
-	{
-		this->line = line;
-	}
-	void operator= (Line& line1)
+	Line& operator= (Line& line1)
 	{
 		delete line;
 		line = new char[strlen(line1.line) + 1];
-		strcpy_s(line, strlen(line1.line)+1, line1.line);
+		strcpy_s(line, strlen(line1.line) + 1, line1.line);
 		length = line1.length;
+		return *this;
 	}
 	ostream& operator<<(ostream& out) {
-		if (line != NULL)
-			out << line;
+		if (*line != '\0')
+			if (length == 1)
+				out << *line;
+			else out << line;
 		else
 			cout << "Строка пуста";
 		return out;
-	}
-	istream& operator>>(istream& in) {
-		cout << "Введите строку\n";
-		in >> line;
-		return in;
 	}
 };
 
@@ -94,8 +104,23 @@ public:
 	{
 		int i = 0;
 		char* LineIden;
-		if (isdigit(Line[i]))
+		string line = string(Line);
+		string id_words[82] = { "alignas", "alignof", "and", "and_eq", "asm", "auto", "bitand", "bitor", "bool", "break", "case", "catch",
+"char", "char16_t", "char32_t", "class", "compl", "const", "constexpr", "const_cast", "continue", "decltypedefault", "delete", "do", "double", "dynamic_cast",
+"else", "enum", "explicit", "export", "extern", "false", "float", "for", "friend", "goto", "if", "inline", "int", "long", "mutable", "namespace", "new", "noexcept", "not", "not_eq", "nullptr",  "operator",
+"or", "or_eq", "private", "protected", "public", "register", "reinterpret_cast", "return", "short", "signed", "sizeof", "static", "static_assert", "static_cast", "struct", "switch", "template",
+"this", "thread_local", "throw", "true", "try", "typedef", "typeid", "typename", "union", "unsigned", "using", "virtual", "void", "volatile", "wchar_t", "whilexor", "xor_eq" };
+		for (int j = 0; j < 82; j++)
 		{
+			if (line == id_words[j])
+			{
+				cout << "Строка является зарезервированным словом, создана пустая строка\n";
+				return;
+			}
+		}
+		if (isdigit(Line[i]) || strlen(Line) == 0 || !(isalpha(Line[i]) || Line[i] == '_'))
+		{
+			cout << "Создана пустая строка\n";
 			return;
 		}
 		else i++;
@@ -103,11 +128,12 @@ public:
 			i++;
 		if (i != strlen(Line))
 		{
+			cout << "Создана пустая строка\n";
 			return;
 		}
-
+		delete get_line();
 		LineIden = new char[strlen(Line) + 1];
-		strcpy_s(LineIden, strlen(Line)+1, Line);
+		strcpy_s(LineIden, strlen(Line) + 1, Line);
 		set_length(strlen(Line));
 		set_line(LineIden);
 		cout << "Сработал конструктор с параметрами класса LineId\n";
@@ -123,18 +149,20 @@ public:
 	LineId& operator= (LineId& Id)
 	{
 		char* LineIden;
+		delete get_line();
 		LineIden = new char[strlen(Id.get_line()) + 1];
-		strcpy_s(LineIden, strlen(Id.get_line())+1, Id.get_line());
+		strcpy_s(LineIden, strlen(Id.get_line()) + 1, Id.get_line());
 		set_length(strlen(Id.get_line()));
 		set_line(LineIden);
 	}
 	LineId& operator+ (LineId& Id)
 	{
 		char* lin;
-		if (get_line() == NULL)
+		if (get_line()[0] == '\0')
 		{
-			if (Id.get_line() != NULL)
+			if (Id.get_line()[0] != '\0')
 			{
+				delete get_line();
 				lin = new char[strlen(Id.get_line()) + 1];
 				strcpy_s(lin, strlen(Id.get_line()) + 1, Id.get_line());
 				set_line(lin);
@@ -145,31 +173,31 @@ public:
 			}
 
 		}
-		else if (Id.get_line() == NULL)
+		else if (Id.get_line()[0] == '\0')
 		{
 			cout << "Вторая строка пустая\n"; return *this;
 		}
 		lin = new char[strlen(this->get_line()) + strlen(Id.get_line()) + 1];
 		strcpy_s(lin, strlen(this->get_line()) + 1, get_line());
-		strcat_s(lin , strlen(this->get_line()) + strlen(Id.get_line()) + 1, Id.get_line());
+		strcat_s(lin, strlen(this->get_line()) + strlen(Id.get_line()) + 1, Id.get_line());
 		delete this->get_line();
 		this->set_line(lin);
 		this->set_length(strlen(get_line()));
 		cout << endl << get_line() << endl;
 		return *this;
-		
+
 	}
 	void Up_Id()
 	{
 		char* LineIden = get_line();
-		for (int i = 0; i < get_length();i++)
+		for (int i = 0; i < get_length(); i++)
 		{
-			if (LineIden[i] > 96 && LineIden[i] < 123)
+			if (LineIden[i] >= 'a' && LineIden[i] <= 'z')
 			{
 				LineIden[i] -= 32;
 			}
 		}
-		cout << endl << LineIden << endl;
+		cout << LineIden << endl;
 	}
 };
 
@@ -182,13 +210,14 @@ public:
 	}
 	Line16(char* l)
 	{
-		int j=0;
+		int j = 0;
 		char* line16;
-		if (!(l[0] == 43 || l[0] == 45 || l[0] >= 48 && l[0] <= 57 || l[0] >= 65 && l[0] <= 70 || l[0] >= 97 && l[0] <= 102))
+		if (!(l[0] == '-' || l[0] == '+' || l[0] >= '0' && l[0] <= '9' || l[0] >= 'a' && l[0] <= 'f' || l[0] >= 'A' && l[0] <= 'F'))
 		{
-			char* l = new char [1];
-			l[0] = '0';
-			set_line(l);
+			delete get_line();
+			line16 = new char;
+			line16[0] = '0';
+			set_line(line16);
 			set_length(1);
 			cout << "Сработал конструктор с параметрами класса Line16 1\n";
 			return;
@@ -196,30 +225,28 @@ public:
 		else { j++; }
 		for (int i = 1; i < strlen(l); i++)
 		{
-			if (l[i] >= 48 && l[i] <= 57 || l[i] >= 65 && l[i] <= 70 || l[i] >= 97 && l[i] <= 102)
+			if (l[i] >= '0' && l[i] <= '9' || l[i] >= 'a' && l[i] <= 'f' || l[i] >= 'A' && l[i] <= 'F')
 			{
 				j++;
 			}
 		}
 		if (j == strlen(l))
 		{
+			delete get_line();
 			line16 = new char[strlen(l) + 1];
-			strcpy_s(line16, strlen(l)+1, l);
+			strcpy_s(line16, strlen(l) + 1, l);
 			set_line(line16);
-			if (l[0] == 43 || l[0] == 45)
-			{
-				set_length(j - 1);
-			}
-			else set_length(j);
+			set_length(j);
 			cout << "Сработал конструктор с параметрами класса Line16 2\n";
 		}
 		else
 		{
-			char* l = new char;
-			*l = '0';
-			set_line(l);
+			line16 = new char;
+			*line16 = '0';
+			set_line(line16);
 			set_length(1);
-			cout << "Сработал конструктор с параметрами класса Line16 2\n";
+			cout << "Сработал конструктор с параметрами класса Line16 3\n";
+			return;
 		}
 	}
 	~Line16()
@@ -234,692 +261,208 @@ public:
 		k++;
 		cout << "Сработал конструктор копирования класса Line16 " << k << " раз";
 	}
-	void may_int()
+	Line16& operator= (Line16& line)
 	{
-		int size = sizeof(int);
+		char* Line;
+		delete get_line();
+		Line = new char[strlen(line.get_line()) + 1];
+		strcpy_s(Line, strlen(line.get_line()) + 1, line.get_line());
+		set_length(strlen(line.get_line()));
+		set_line(Line);
+	}
+	bool may_int()
+	{
 		char* l = get_line();
 		int len = get_length();
-		if (size == 2)
+		if (l[0] == '+')
 		{
-			if (l[0] == 43)
+			len -= 1;
+			if (len > 8)  return false;
+			if (len == 8 && l[1] > '7') return false;
+			else return true;
+		}
+		else if (l[0] == '-')
+		{
+			len -= 1;
+			if (len > 8)  return false;
+			else if (len == 8 && l[1] > '7')
 			{
-				len -= 1;
-				if (len > 4)
+				if (l[1] == '8')
 				{
-					cout << "Число не может быть представлено как int\n";
-					return;
-				}
-				if (len == 4 && l[1] > 55)
-				{
-					cout << "Число не может быть представлено как int\n";
-				}
-				else
-				{
-					cout << "Число может быть представлено как int\n";
-				}
-			}
-			else if (l[0] == 45)
-			{
-				len -= 1;
-				if (len > 4)
-				{
-					cout << "Число не может быть представлено как int\n";
-					return;
-				}
-				if (len == 4 && l[1] > 55)
-				{
-					if (l[1] == 56)
+					bool flag;
+					for (int i = 2; i < len + 1; i++)
 					{
-						bool flag;
-						for (int i = 2; i < len + 2; i++)
+						if (l[i] == '0')
 						{
-							if (l[i] == 48)
-							{
-								flag = 1;
-							}
-							else 
-							{
-								flag = 0; break;
-							}
-						}
-						if (flag == 0)
-						{
-							cout << "Число не может быть представлено как int\n";
-							return;
+							flag = 1;
 						}
 						else
 						{
-							cout << "Число может быть представлено как int\n";
-							return;
+							flag = 0; break;
 						}
-						
 					}
-					cout << "Число не может быть представлено как int\n";
+					if (flag == 0) 	return false;
+					else return true;
+
 				}
-				else
-				{
-					cout << "Число может быть представлено как int\n";
-				}
+				else return false;
 			}
-			else
-			{
-				if (len > 4)
-				{
-					cout << "Число не может быть представлено как int\n";
-				}
-				if (len == 4 && l[0] > 55)
-				{
-					cout << "Число не может быть представлено как int\n";
-				}
-				else
-				{
-					cout << "Число может быть представлено как int\n";
-				}
-			}
+			else return true;
 		}
 		else
 		{
-			if (l[0] == 43)
-			{
-				len -= 1;
-				if (len > 8)
-				{
-					cout << "Число не может быть представлено как int\n";
-					return;
-				}
-				if (len == 8 && l[1] > 55)
-				{
-					cout << "Число не может быть представлено как int\n";
-					return;
-				}
-				else
-				{
-					cout << "Число может быть представлено как int\n";
-					return;
-				}
-			}
-			else if (l[0] == 45)
-			{
-				len -= 1;
-				if (len > 8)
-				{
-					cout << "Число не может быть представлено как int\n";
-					return;
-				}
-				else if (len == 8 && l[1] > 55)
-				{
-					if (l[1] == 56)
-					{
-						bool flag;
-						for (int i = 2; i < len + 1; i++)
-						{
-							if (l[i] == 48)
-							{
-								flag = 1;
-							}
-							else
-							{
-								flag = 0; break;
-							}
-						}
-						if (flag == 0)
-						{
-							cout << "Число не может быть представлено как int";
-							return;
-						}
-						else
-						{
-							cout << "Число может быть представлено как int";
-							return;
-						}
-
-					}
-					cout << "Число не может быть представлено как int";
-				}
-				else
-				{
-					cout << "Число может быть представлено как int";
-					return;
-				}
-			}
-			else
-			{
-				if (len > 8)
-				{
-					cout << "Число не может быть представлено как int";
-					return;
-				}
-				else if (len == 8 && l[0] > 55)
-				{
-					cout << "Число не может быть представлено как int";
-					return;
-				}
-				else
-				{
-					cout << "Число может быть представлено как int";
-					return;
-				}
-			}
+			if (len > 8) return false;
+			else if (len == 8 && l[0] > '7') return false;
+			else return true;
 		}
 	}
 	Line16& operator+ (Line16& l)
 	{
-		int* n1, * n2, i, j;
-		char* line1 = get_line(), * line2 = l.get_line();
-		n1 = new int[get_length()];
-		n2 = new int[l.get_length()];
-		if (line1[0] == 43 || line1[0] == 45)
+		int  i, j;
+		bool flag=1;
+		vector<int> n1, n2;
+		char* line1 = get_line(), *line2 = l.get_line();
+		char_to_int_vector(n1);
+		l.char_to_int_vector(n2);
+		if (((line1[0] == '+' || line1[0] != '-') && (line2[0]=='+' || line2[0]!='-')) || (line1[0] == '-' && line2[0]=='-'))
 		{
-			for (i = 1, j = 0; i < get_length() + 1; i++, j++)
+			line1[0] == '-' ? flag=1 : flag=0;
+			if (n1.size() >= n2.size())
 			{
-				if (line1[i] >= 48 && line1[i] <= 57)
+				for (i = n1.size()-1, j = n2.size()-1; j >= 0; j--, i--)
 				{
-					n1[j] = line1[i] - 48;
-				}
-				else if (line1[i] >= 65 && line1[i] <= 70)
-				{
-					n1[j] = line1[i] - 55;
-				}
-				else
-				{
-					n1[j] = line1[i] - 87;
-				}
-			}
-		}
-		else
-		{
-			for (j = 0; j < get_length() + 1; j++)
-			{
-				if (line1[j] >= 48 && line1[j] <= 57)
-				{
-					n1[j] = line1[j] - 48;
-				}
-				else if (line1[j] >= 65 && line1[j] <= 70)
-				{
-					n1[j] = line1[j] - 55;
-				}
-				else
-				{
-					n1[j] = line1[j] - 87;
-				}
-			}
-		}
-		if (line2[0] == 43 || line2[0] == 45)
-		{
-			for (i = 1, j = 0; i < l.get_length() + 1; i++, j++)
-			{
-				if (line2[i] >= 48 && line2[i] <= 57)
-				{
-					n2[j] = line2[i] - 48;
-				}
-				else if (line2[i] >= 65 && line2[i] <= 70)
-				{
-					n2[j] = line2[i] - 55;
-				}
-				else
-				{
-					n2[j] = line2[i] - 87;
-				}
-			}
-		}
-		else
-		{
-			for (j = 0; j < l.get_length() + 1; j++)
-			{
-				if (line2[j] >= 48 && line2[j] <= 57)
-				{
-					n2[j] = line2[j] - 48;
-				}
-				else if (line2[j] >= 65 && line2[j] <= 70)
-				{
-					n2[j] = line2[j] - 55;
-				}
-				else
-				{
-					n2[j] = line2[j] - 87;
-				}
-			}
-		}
-		if (line1[0] == 45)
-		{
-			if (line2[0] == 43 || line2[0]!=43 && line2[0]!=45)
-			{
-				if (get_length() < l.get_length())
-				{
-					for (i = get_length() - 1, j = l.get_length() - 1; i >= 0; i--, j--)
+					n1[i] += n2[j];
+					if (n1[i] >= 16)
 					{
-						n2[j] -= n1[i];
-						if (n2[j] < 0)
-						{
-							n2[j - 1] -= 1;
-							n2[j] += 15;
-						}
+						n1[i] -= 16;
+						n1[i - 1] += 1;
 					}
-					cout << "Сумма равна: +";
-					for (i = 0; i < l.get_length(); i++)
-					{
-						char k = 55;
-						if (n2[i] <= 9) cout << n2[i];
-						else
-						{
-							k += n2[i];
-							cout << k;
-							k = 55;
-						}
-					}
-					return *this;
-
 				}
-				else if (get_length() > l.get_length())
-				{
-					for (i = get_length() - 1, j = l.get_length() - 1; j >= 0; i--, j--)
-					{
-						n1[i] -= n2[j];
-						if ( n1[i] < 0)
-						{
-							n1[i - 1] -= 1;
-							n1[i] += 15;
-						}
-					}
-					cout << "Сумма равна: -";
-					for (i = 0; i < get_length(); i++)
-					{
-						char k = 55;
-						if (n1[i] <= 9) cout << n1[i];
-						else
-						{
-							k += n1[i];
-							cout << k;
-							k = 55;
-						}
-					}
-					return *this;
-				}
-				else
-				{
-					int flag = 0;
-					for (i = 0; i < get_length() + 1; i++)
-					{
-						if (n1[i] > n2[i])
-						{
-							break;
-						}
-						else if(n1[i] < n2[i])
-						{
-							flag = 1;
-							break;
-						}
-					}
-					if (i != get_length())
-					{
-						if (flag == 0)
-						{
-							cout << "Сумма равна: -";
-							for (i = get_length() - 1; i >= 0; i--)
-							{
-								n1[i] -= n2[i];
-								if (n1[i] < 0)
-								{
-									n1[i] += 15;
-									n1[i - 1] -= 1;
-								}
-							}
-							for (i = 0; i < get_length(); i++)
-							{
-								char k = 55;
-								if (n1[i] <= 9) cout << n1[i];
-								else
-								{
-									k += n1[i];
-									cout << k;
-									k = 55;
-								}
-							}
-							return *this;
-						}
-						else
-						{
-							cout << "Сумма равна: +";
-							for (i = get_length() - 1; i >= 0; i--)
-							{
-								n2[i] -= n1[i];
-								if (n2[i] < 0)
-								{
-									n2[i] += 15;
-									n2[i - 1] -= 1;
-								}
-							}
-							for (i = 0; i < get_length(); i++)
-							{
-								char k = 55;
-								if (n2[i] <= 9) cout << n2[i];
-								else
-								{
-									k += n2[i];
-									cout << k;
-									k = 55;
-								}
-							}
-							return *this;
-						}
-					}
-					else cout << "Сумма равна: 0";
-
-				}
+				answer_output(n1, n1.size(),flag);
 			}
 			else
 			{
-				if (get_length() < l.get_length())
-				{
-					for (i = get_length() - 1, j = l.get_length() - 1; i >= 0; i--,j--)
-					{
-						n2[j] += n1[i];
-						if (n2[j] > 15)
-						{
-							n2[j] -= 15;
-							n2[j - 1] += 1;
-						}
-					}
-					cout << "Сумма равна: -";
-					if (n2[0] > 15)
-					{
-						cout << "1";
-						n2[0] -= 15;
-					}
-					for (i = 0; i < l.get_length(); i++)
-					{
-						char k = 55;
-						if (n2[i] <= 9) cout << n2[i];
-						else
-						{
-							k += n2[i];
-							cout << k;
-							k = 55;
-						}
-					}
-					return *this;
-				}
-				else if (get_length() > l.get_length())
-				{
-					for (i = get_length() - 1, j = l.get_length() - 1; j >= 0; j--, i--)
-					{
-						n1[i] += n2[j];
-						if (n1[i] > 15)
-						{
-							n1[i] -= 15;
-							n1[i - 1] += 1;
-						}
-					}
-					cout << "Сумма равна: -";
-					if (n1[0] > 15)
-					{
-						cout << "1";
-						n1[0] -= 15;
-					}
-					for (i = 0; i < get_length(); i++)
-					{
-						char k = 55;
-						if (n1[i] <= 9) cout << n1[i];
-						else
-						{
-							k += n1[i];
-							cout << k;
-							k = 55;
-						}
-					}
-					return *this;
-				}
-				else
-				{
-					for (i = get_length() - 1; i >= 0; i--)
-					{
-						n1[i] += n2[i];
-						if (n1[i] > 15 && i!=0)
-						{
-							n1[i] -= 15;
-							n1[i - 1] += 1;
-						}
-					}
-					cout << "Сумма равна: -";
-					if (n1[0] > 15)
-					{
-						cout << "1";
-						n1[0] -= 15;
-					}
-					for (i = 0; i < get_length(); i++)
-					{
-						char k = 55;
-						if (n1[i] <= 9) cout << n1[i];
-						else
-						{
-							k += n1[i];
-							cout << k;
-							k = 55;
-						}
-					}
-					return *this;
-				}
-			}
-		}
-		else if (line1[0] == 43 || line1[0] != 43 && line1[0] != 45)
-		{
-		if (line2[0] == 43 || line2[0] != 43 && line2[0] != 45)
-			{
-			  if (get_length() < l.get_length())
-			  {
-				for (i = get_length() - 1, j = l.get_length() - 1; i >= 0; i--, j--)
+				for (i = n1.size() - 1, j = n2.size() - 1; i >= 0; j--, i--)
 				{
 					n2[j] += n1[i];
-					if (n2[j] > 15)
+					if (n2[j] >= 16)
 					{
-						n2[j] -= 15;
+						n2[j] -= 16;
 						n2[j - 1] += 1;
 					}
 				}
-				cout << "Сумма равна: +";
-				if (n2[0] > 15)
-				{
-					cout << "1";
-					n2[0] -= 15;
-				}
-				for (i = 0; i < l.get_length(); i++)
-				{
-					char k = 55;
-					if (n2[i] <= 9) cout << n2[i];
-					else
-					{
-						k += n2[i];
-						cout << k;
-						k = 55;
-					}
-				}
-				return *this;
-			  }
-			  else if (get_length() > l.get_length())
-			  {
-				for (i = get_length() - 1, j = l.get_length() - 1; j >= 0; j--, i--)
-				{
-					n1[i] += n2[j];
-					if (n1[i] > 15)
-					{
-						n1[i] -= 15;
-						n1[i - 1] += 1;
-					}
-				}
-				cout << "Сумма равна: +";
-				if (n1[0] > 15)
-				{
-					cout << "1";
-					n1[0] -= 15;
-				}
-				for (i = 0; i < get_length(); i++)
-				{
-					char k = 55;
-					if (n1[i] <= 9) cout << n1[i];
-					else
-					{
-						k += n1[i];
-						cout << k;
-						k = 55;
-					}
-				}
-				return *this;
-			  }
-			  else
-			  {
-				for (i = get_length() - 1; i >= 0; i--)
-				{
-					n1[i] += n2[i];
-					if (n1[i] > 15 && i != 0)
-					{
-						n1[i] -= 15;
-						n1[i - 1] += 1;
-					}
-				}
-				cout << "Сумма равна: +";
-				if (n1[0] > 15)
-				{
-					cout << "1";
-					n1[0] -= 15;
-				}
-				for (i = 0; i < get_length(); i++)
-				{
-					char k = 55;
-					if (n1[i] <= 9) cout << n1[i];
-					else
-					{
-						k += n1[i];
-						cout << k;
-						k = 55;
-					}
-				}
-				return *this;
-			  }
+				l.answer_output(n2, n2.size(),flag);
 			}
-			else 
+			return *this;
+		}
+		else
+		{
+			if (n1.size() > n2.size())
 			{
-			if (get_length() < l.get_length())
-			{
-				for (i = get_length() - 1, j = l.get_length() - 1; i >= 0; i--, j--)
-				{
-					n2[j] -= n1[i];
-					if (n2[j] < 0)
-					{
-						n2[j - 1] -= 1;
-						n2[j] += 15;
-					}
-				}
-				cout << "Сумма равна: -";
-				for (i = 0; i < l.get_length(); i++)
-				{
-					char k = 55;
-					if (n2[i] <= 9) cout << n2[i];
-					else
-					{
-						k += n2[i];
-						cout << k;
-						k = 55;
-					}
-				}
-				return *this;
-
-			}
-			else if (get_length() > l.get_length())
-			{
-				for (i = get_length() - 1, j = l.get_length() - 1; j >= 0; i--, j--)
+				for (i = n1.size() - 1, j = n2.size() - 1; j >= 0; j--, i--)
 				{
 					n1[i] -= n2[j];
 					if (n1[i] < 0)
 					{
+						n1[i] += 16;
 						n1[i - 1] -= 1;
-						n1[i] += 15;
 					}
 				}
-				cout << "Сумма равна: +";
-				for (i = 0; i < get_length(); i++)
+				line1[0] == '-' ? answer_output(n1, n1.size(), flag) : answer_output(n1, n1.size(), 0);
+			}
+			else if (n1.size() < n2.size())
+			{
+				for (i = n1.size() - 1, j = n2.size() - 1; i >= 0; j--, i--)
 				{
-					char k = 55;
-					if (n1[i] <= 9) cout << n1[i];
-					else
+					n2[j] -= n1[i];
+					if (n2[j] < 0)
 					{
-						k += n1[i];
-						cout << k;
-						k = 55;
+						n2[j] += 16;
+						n2[j - 1] -= 1;
 					}
 				}
-				return *this;
+				line2[0] == '-' ? l.answer_output(n2, n2.size(), flag) : l.answer_output(n2, n2.size(), 0);
 			}
 			else
 			{
-				int flag = 0;
-				for (i = 0; i < get_length() + 1; i++)
+				if (n1 > n2)
 				{
-					if (n1[i] > n2[i])
+					for (i = n1.size()-1; i >= 0; i--)
 					{
-						break;
-					}
-					else if (n1[i] < n2[i])
-					{
-						flag = 1;
-						break;
-					}
+						n1[i] -= n2[i];
+						if (n1[i] < 0)
+						{
+							n1[i] += 16;
+							n1[i - 1] -= 1;
+						}
+				    }
+				   line1[0] == '-' ? answer_output(n1, n1.size(), flag) : answer_output(n1, n1.size(), 0);
 				}
-				if (i != get_length())
+				else if (n1 < n2)
 				{
-					if (flag == 0)
+					for (i = n1.size()-1; i >= 0; i--)
 					{
-						cout << "Сумма равна: +";
-						for (i = get_length() - 1; i >= 0; i--)
+						n2[i] -= n1[i];
+						if (n2[i] < 0)
 						{
-							n1[i] -= n2[i];
-							if (n1[i] < 0)
-							{
-								n1[i] += 15;
-								n1[i - 1] -= 1;
-							}
+							n2[i] += 16;
+							n2[i - 1] -= 1;
 						}
-						for (i = 0; i < get_length(); i++)
-						{
-							char k = 55;
-							if (n1[i] <= 9) cout << n1[i];
-							else
-							{
-								k += n1[i];
-								cout << k;
-								k = 55;
-							}
-						}
-						return *this;
 					}
-					else
-					{
-						cout << "Сумма равна: -";
-						for (i = get_length() - 1; i >= 0; i--)
-						{
-							n2[i] -= n1[i];
-							if (n2[i] < 0)
-							{
-								n2[i] += 15;
-								n2[i - 1] -= 1;
-							}
-						}
-						for (i = 0; i < get_length(); i++)
-						{
-							char k = 55;
-							if (n2[i] <= 9) cout << n2[i];
-							else
-							{
-								k += n2[i];
-								cout << k;
-								k = 55;
-							}
-						}
-						return *this;
-					}
+					line2[0] == '-' ? l.answer_output(n2, n2.size(), flag) : l.answer_output(n2, n2.size(), 0);
 				}
-				else cout << "Сумма равна: 0";
-
+				else cout << "Сумма равна нулю";
 			}
+			return *this;
+		}
+	}
+	void char_to_int_vector(vector<int> &n2)
+	{
+		vector<int> n1;
+		int i, j, len1 = get_length();
+		char* line1 = get_line();
+		if (line1[0] == '-' || line1[0] == '+')
+		{
+			len1 -= 1;
+			n1.resize(len1);
+			for (i = 1, j = 0; j < len1; i++, j++)
+			{
+				if (line1[i] >= '0' && line1[i] <= '9')  n1[j] = line1[i] - 48;
+				else if (line1[i] >= 'A' && line1[i] <= 'F') n1[j] = line1[i] - 55;
+				else n1[j] = line1[i] - 87;
+			}
+		}
+		else
+		{
+			n1.resize(len1);
+			for (j = 0; j < len1; j++)
+			{
+				if (line1[j] >= '0' && line1[j] <= '9') n1[j] = line1[j] - 48;
+				else if (line1[j] >= 'A' && line1[j] <= 'F') n1[j] = line1[j] - 55;
+				else n1[j] = line1[j] - 87;
+			}
+		}
+		n2.swap(n1);
+	}
+	void answer_output(vector<int> n, int j,bool flag)
+	{
+		int k, i=0;
+		flag == 1 ? cout << "Сумма равна: -" : cout << "Сумма равна: +";
+		if (n[0] > 16)
+		{
+			cout << '1';
+			n[0] -= 16;
+		}
+		else if (n[0] == 0) i++;
+		for (; i < j; i++)
+		{
+			char k = 55;
+			if (n[i] <= 9) cout << n[i];
+			else
+			{
+				k += n[i];
+				cout << k;
+				k = 55;
 			}
 		}
 	}
