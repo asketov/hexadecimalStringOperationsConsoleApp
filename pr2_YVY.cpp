@@ -1,6 +1,7 @@
+
 #define _CRT_SECURE_NO_WARNINGS
 #include <iostream>
-#include "Classes.cpp"
+#include "Source28.cpp"
 #pragma warning(disable : 4703)
 using namespace std;
 
@@ -69,7 +70,7 @@ int main() {
 						break;
 					case '3':
 						strings[i] = new Line16(input);
-						
+
 						break;
 					default:
 						strings[i] = new Line();
@@ -212,7 +213,8 @@ int main() {
 				case '3':
 					cout << "Введите номер строки\n";
 					cin >> k1;
-					(*(Line16*)strings[k1 - 1]).may_int();
+					if ((*(Line16*)strings[k1 - 1]).may_int()) cout << "Число может быть представлено как int\n";
+					else cout << "Число не может быть представлено как int\n";
 					break;
 				case '4':
 					cout << "Введите номер первой строки\n";
